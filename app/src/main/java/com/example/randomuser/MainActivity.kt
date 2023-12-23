@@ -6,15 +6,22 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.ViewModelProvider
+import com.example.randomuser.features.userList.ui.UserListScreen
+import com.example.randomuser.features.userList.viewModel.UserListViewModel
+import com.example.randomuser.features.userList.viewModel.UserListViewModelFactory
 import com.example.randomuser.ui.theme.RandomUserTheme
 
 class MainActivity : ComponentActivity() {
+    private val viewModelFactory = UserListViewModelFactory()
+    private val userListViewModel by lazy {
+        ViewModelProvider(this, viewModelFactory)[UserListViewModel::class.java]
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             RandomUserTheme {
                 // A surface container using the 'background' color from the theme
@@ -22,25 +29,9 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Greeting("Android")
+                    UserListScreen(userListViewModel)
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    RandomUserTheme {
-        Greeting("Android")
     }
 }

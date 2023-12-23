@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">RandomUser</string>
+    <string name="user_list_item_image_content_description">user profile picture</string>
 </resources>
