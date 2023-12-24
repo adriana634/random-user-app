@@ -30,9 +30,9 @@ class RandomUserManager(private val randomUserService: RandomUserService) {
      *
      * @return Response containing the list of users or an error response.
      */
-    suspend fun getRandomUsers(): Response<List<User>> {
+    suspend fun getRandomUsers(numberOfUsers: Int): Response<List<User>> {
         return try {
-            val response = randomUserService.getRandomUsers()
+            val response = randomUserService.getRandomUsers(numberOfUsers)
             handleResponse(response)
         } catch (e: IOException) {
             Log.e(TAG, "Network error", e)

@@ -5,19 +5,10 @@
       <entry key="RandomUserManagerInstrumentedTest">
         <State />
       </entry>
-      <entry key="RandomUserServiceTest">
+      <entry key="UserListScreenPreview">
         <State />
       </entry>
       <entry key="app">
-        <State />
-      </entry>
-      <entry key="getRandomUsers_networkError_returnsErrorResponse()">
-        <State />
-      </entry>
-      <entry key="getRandomUsers_networkSuccess_returnsMappedUsers()">
-        <State />
-      </entry>
-      <entry key="getRandomUsers_shouldReturnValidResponse()">
         <State />
       </entry>
     </value>
