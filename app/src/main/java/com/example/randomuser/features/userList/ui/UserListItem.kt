@@ -1,6 +1,5 @@
 package com.example.randomuser.features.userList.ui
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,11 +16,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.example.randomuser.R
 import com.example.randomuser.features.userList.model.User
 import com.example.randomuser.ui.theme.RandomUserTheme
@@ -39,8 +38,8 @@ fun UserListItem(user: User) {
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.user_placeholder),
+        AsyncImage(
+            model = user.picture,
             contentDescription = stringResource(R.string.user_list_item_image_content_description),
             modifier = Modifier
                 .size(52.dp)
