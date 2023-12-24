@@ -51,10 +51,7 @@ class RandomUserManager(private val randomUserService: RandomUserService) {
      */
     private fun handleResponse(response: Response<RandomUserResponse>): Response<List<User>> {
         return if (response.isSuccessful) {
-            val users = response.body()?.results?.map { randomUser ->
-                mapToUser(randomUser)
-            } ?: emptyList()
-
+            val users = filterAndMapUsers(response.body()?.results)
             Response.success(users)
         } else {
             Log.e(TAG, "API error: ${response.code()} ${response.message()}")
@@ -63,10 +60,21 @@ class RandomUserManager(private val randomUserService: RandomUserService) {
     }
 
     /**
-     * Maps a RandomUser to a User.
+     * Filters out duplicate users and maps them to [User] objects.
      *
-     * @param randomUser The RandomUser to be mapped.
-     * @return The mapped User.
+     * @param randomUsers The list of [RandomUser] objects.
+     * @return The list of mapped [User] objects without duplicates.
+     */
+    private fun filterAndMapUsers(randomUsers: List<RandomUser>?): List<User> {
+        val distinctUsers = randomUsers?.distinctBy { it.email }
+        return distinctUsers?.map { mapToUser(it) } ?: emptyList()
+    }
+
+    /**
+     * Maps a [RandomUser] to a User.
+     *
+     * @param randomUser The [RandomUser] to be mapped.
+     * @return The mapped [User].
      */
     private fun mapToUser(randomUser: RandomUser): User {
         return User(
