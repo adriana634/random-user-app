@@ -25,6 +25,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.randomuser.R
+import com.example.randomuser.features.map.ui.MapView
 import com.example.randomuser.model.User
 
 @Composable
@@ -80,6 +81,7 @@ fun UserDetailsScreen(user: User) {
                 .padding(top = 260.dp)
         ) {
             UserInfoFieldsContainer(user)
+            user.location?.let { MapView(it) }
         }
     }
 }

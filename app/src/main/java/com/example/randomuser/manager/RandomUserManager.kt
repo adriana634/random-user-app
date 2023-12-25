@@ -1,6 +1,7 @@
 package com.example.randomuser.manager
 
 import android.util.Log
+import com.example.randomuser.model.Location
 import com.example.randomuser.model.User
 import com.example.randomuser.service.RandomUser
 import com.example.randomuser.service.RandomUserResponse
@@ -80,14 +81,18 @@ class RandomUserManager(private val randomUserService: RandomUserService) {
      * @return The mapped [User].
      */
     private fun mapToUser(randomUser: RandomUser): User {
+        val name ="${randomUser.name.title} ${randomUser.name.first} ${randomUser.name.last}"
+        val location = Location(randomUser.location.coordinates.latitude, randomUser.location.coordinates.longitude)
+
         return User(
-            "${randomUser.name.title} ${randomUser.name.first} ${randomUser.name.last}",
+            name,
             randomUser.email,
             randomUser.gender,
             randomUser.picture.thumbnail,
             randomUser.picture.medium,
             randomUser.registered.date,
-            randomUser.cell
+            randomUser.cell,
+            location
         )
     }
 
