@@ -42,8 +42,8 @@ fun UserListScreen(navController: NavController, userListViewModel: UserListView
     }
 
     val navigateToUserDetails by rememberUpdatedState(userListViewModel.navigateToUserDetails)
-    navigateToUserDetails?.let { user ->
-        navController.navigate("userDetailsScreen/${user.email}")
+    navigateToUserDetails?.let { email ->
+        navController.navigate("userDetailsScreen/${email}")
         userListViewModel.onUserDetailsScreenNavigated()
     }
 
@@ -67,7 +67,7 @@ fun UserListScreen(navController: NavController, userListViewModel: UserListView
                     .padding(8.dp)
             )
 
-            UserList(users, onItemClick = { userListViewModel.onUserItemClick(it) })
+            UserList(users)
         }
     }
 }

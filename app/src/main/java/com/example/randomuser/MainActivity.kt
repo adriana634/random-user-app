@@ -54,7 +54,7 @@ class MainActivity : ComponentActivity() {
 
             composable("userDetailsScreen/{userEmail}") { backStackEntry ->
                 val userEmail = backStackEntry.arguments?.getString("userEmail")
-                val user = userListViewModel.users.value?.find { it.email == userEmail }
+                val user = userEmail?.let { userListViewModel.findUserModelByEmail(it) }
                 user?.let {
                     UserDetailsScreen(user = it)
                 }

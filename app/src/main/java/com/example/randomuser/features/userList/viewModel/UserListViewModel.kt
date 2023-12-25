@@ -21,7 +21,8 @@ import java.io.IOException
 /**
  * ViewModel class for managing the list of users.
  */
-class UserListViewModel(private val randomUserManager: RandomUserManager) : ViewModel() {
+class UserListViewModel(private val randomUserManager: RandomUserManager) : ViewModel(),
+    OnUserItemClickListener {
 
     companion object {
         // TAG for logging purposes.
@@ -31,11 +32,13 @@ class UserListViewModel(private val randomUserManager: RandomUserManager) : View
 
     private var usersLoaded = false
 
-    private val _users = MutableLiveData<List<User>>()
-    private var _navigateToUserDetails by mutableStateOf<User?>(null)
+    private val _users = MutableLiveData<List<UserListItemViewModel>>()
+    private var _navigateToUserDetails by mutableStateOf<String?>(null)
 
-    val users: LiveData<List<User>> get() = _users
-    val navigateToUserDetails: User? get() = _navigateToUserDetails
+    private val _allUserModels = mutableListOf<User>()
+
+    val users: LiveData<List<UserListItemViewModel>> get() = _users
+    val navigateToUserDetails: String? get() = _navigateToUserDetails
 
     suspend fun loadUsersAsync() {
         if (usersLoaded) {
@@ -48,7 +51,11 @@ class UserListViewModel(private val randomUserManager: RandomUserManager) : View
             }
 
             if (response.isSuccessful) {
-                _users.value = response.body()
+                _allUserModels.addAll(response.body() ?: emptyList())
+
+                _users.value = _allUserModels.map { user ->
+                    UserListItemViewModel(user, this)
+                }
                 usersLoaded = true
             } else {
                 Log.e(TAG, "API error: ${response.code()} ${response.message()}")
@@ -60,9 +67,9 @@ class UserListViewModel(private val randomUserManager: RandomUserManager) : View
         }
     }
 
-    fun onUserItemClick(user: User) {
-        Log.d(TAG, "User clicked: ${user.email}")
-        _navigateToUserDetails = user
+    override fun onUserItemClick(email: String) {
+        Log.d(TAG, "User clicked: $email")
+        _navigateToUserDetails = email
     }
 
     fun onUserDetailsScreenNavigated() {
@@ -70,15 +77,19 @@ class UserListViewModel(private val randomUserManager: RandomUserManager) : View
         _navigateToUserDetails = null
     }
 
-    fun getUsersWithQuery(query: String): MutableLiveData<List<User>> {
-        val filteredUsers = MutableLiveData<List<User>>()
+    fun findUserModelByEmail(email: String): User? {
+        return _allUserModels.find { it.email == email }
+    }
+
+    fun getUsersWithQuery(query: String): MutableLiveData<List<UserListItemViewModel>> {
+        val filteredUsers = MutableLiveData<List<UserListItemViewModel>>()
 
         viewModelScope.launch {
-            combine(_users.asFlow(), MutableStateFlow(query)) { userList, searchQuery ->
+            combine(_users.asFlow(), MutableStateFlow(query)) { users, searchQuery ->
                 if (searchQuery.isBlank()) {
-                    userList
+                    users
                 } else {
-                    userList.filter { user ->
+                    users.filter { user ->
                         user.name.contains(searchQuery, ignoreCase = true) ||
                                 user.email.contains(searchQuery, ignoreCase = true)
                     }

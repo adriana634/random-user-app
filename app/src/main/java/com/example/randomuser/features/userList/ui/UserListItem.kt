@@ -23,6 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.randomuser.R
+import com.example.randomuser.features.userList.viewModel.UserListItemViewModel
 import com.example.randomuser.model.User
 import com.example.randomuser.ui.theme.RandomUserTheme
 import java.util.Date
@@ -33,12 +34,12 @@ import java.util.Date
  * @param user The user data to be displayed.
  */
 @Composable
-fun UserListItem(user: User, onItemClick: ((User) -> Unit)? = null) {
+fun UserListItem(user: UserListItemViewModel) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .clickable { onItemClick?.invoke(user) },
+            .clickable { user.onUserItemClick() },
         verticalAlignment = Alignment.CenterVertically
     ) {
         AsyncImage(
@@ -64,10 +65,10 @@ fun UserListItem(user: User, onItemClick: ((User) -> Unit)? = null) {
 fun UserListItemPreview() {
     RandomUserTheme {
         val sampleUser = getSampleUser()
-        UserListItem(user = sampleUser, onItemClick = null)
+        UserListItem(user = sampleUser)
     }
 }
 
-private fun getSampleUser(): User {
-    return User("John Doe", "john.doe@example.com", "male", "https://placehold.co/52x52/png", "https://placehold.co/52x52/png", Date(), "123456789")
+private fun getSampleUser(): UserListItemViewModel {
+    return UserListItemViewModel(User("John Doe", "john.doe@example.com", "male", "https://placehold.co/52x52/png", "https://placehold.co/52x52/png", Date(), "123456789"))
 }
