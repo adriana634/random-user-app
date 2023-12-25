@@ -29,6 +29,8 @@ class UserListViewModel(private val randomUserManager: RandomUserManager) : View
         private const val INITIAL_USER_COUNT = 100
     }
 
+    private var usersLoaded = false
+
     private val _users = MutableLiveData<List<User>>()
     private var _navigateToUserDetails by mutableStateOf<User?>(null)
 
@@ -36,6 +38,10 @@ class UserListViewModel(private val randomUserManager: RandomUserManager) : View
     val navigateToUserDetails: User? get() = _navigateToUserDetails
 
     suspend fun loadUsersAsync() {
+        if (usersLoaded) {
+            return
+        }
+
         try {
             val response = withContext(Dispatchers.IO) {
                 randomUserManager.getRandomUsers(INITIAL_USER_COUNT)
@@ -43,6 +49,7 @@ class UserListViewModel(private val randomUserManager: RandomUserManager) : View
 
             if (response.isSuccessful) {
                 _users.value = response.body()
+                usersLoaded = true
             } else {
                 Log.e(TAG, "API error: ${response.code()} ${response.message()}")
             }
