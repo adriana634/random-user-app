@@ -33,8 +33,8 @@ fun UserListPreview() {
 
 private fun getSampleUserList(): List<User> {
     return listOf(
-        User("John Doe", "john.doe@example.com", "male", "https://placehold.co/52x52/png", Date(), "123456789"),
-        User("Jane Doe", "jane.doe@example.com", "female", "https://placehold.co/52x52/png", Date(), "123456789"),
-        User("Bob Smith", "bob.smith@example.com", "male", "https://placehold.co/52x52/png", Date(), "123456789")
+        User("John Doe", "john.doe@example.com", "male", "https://placehold.co/52x52/png", "https://placehold.co/52x52/png", Date(), "123456789"),
+        User("Jane Doe", "jane.doe@example.com", "female", "https://placehold.co/52x52/png", "https://placehold.co/52x52/png", Date(), "123456789"),
+        User("Bob Smith", "bob.smith@example.com", "male", "https://placehold.co/52x52/png", "https://placehold.co/52x52/png", Date(), "123456789")
     )
 }

@@ -42,7 +42,7 @@ fun UserListItem(user: User, onItemClick: ((User) -> Unit)? = null) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         AsyncImage(
-            model = user.picture,
+            model = user.pictureThumbnail,
             contentDescription = stringResource(R.string.user_list_item_image_content_description),
             modifier = Modifier
                 .size(52.dp)
@@ -69,5 +69,5 @@ fun UserListItemPreview() {
 }
 
 private fun getSampleUser(): User {
-    return User("John Doe", "john.doe@example.com", "male", "https://placehold.co/52x52/png", Date(), "123456789")
+    return User("John Doe", "john.doe@example.com", "male", "https://placehold.co/52x52/png", "https://placehold.co/52x52/png", Date(), "123456789")
 }

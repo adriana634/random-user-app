@@ -43,7 +43,7 @@ class RandomUserManagerInstrumentedTest {
         mappedUsers?.forEach { user ->
             assertNotNull("User name should not be null", user.name)
             assertNotNull("User email should not be null", user.email)
-            assertNotNull("User picture should not be null", user.picture)
+            assertNotNull("User picture should not be null", user.pictureThumbnail)
         }
     }
 

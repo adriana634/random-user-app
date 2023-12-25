@@ -85,6 +85,7 @@ class RandomUserManager(private val randomUserService: RandomUserService) {
             randomUser.email,
             randomUser.gender,
             randomUser.picture.thumbnail,
+            randomUser.picture.medium,
             randomUser.registered.date,
             randomUser.cell
         )
