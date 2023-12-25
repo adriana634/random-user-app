@@ -12,10 +12,11 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import retrofit2.Response
+import retrofit2.http.Query
 import java.io.IOException
 
 class FakeErrorRandomUserService : RandomUserService {
-    override suspend fun getRandomUsers(): Response<RandomUserResponse> {
+    override suspend fun getRandomUsers(@Query(value = "results") numberOfUsers: Int): Response<RandomUserResponse> {
         throw IOException("Simulated network error")
     }
 }
@@ -29,7 +30,8 @@ class RandomUserManagerInstrumentedTest {
     @Test
     fun getRandomUsers_networkSuccess_returnsMappedUsers(): Unit = runBlocking {
         // Act
-        val result = randomUserManager.getRandomUsers()
+        val numberOfUsers = 5
+        val result = randomUserManager.getRandomUsers(numberOfUsers)
 
         // Assert
         assertEquals(true, result.isSuccessful)
@@ -48,7 +50,8 @@ class RandomUserManagerInstrumentedTest {
     @Test
     fun getRandomUsers_networkError_returnsErrorResponse() = runBlocking {
         // Act
-        val result = fakeErrorRandomUserManager.getRandomUsers()
+        val numberOfUsers = 5
+        val result = fakeErrorRandomUserManager.getRandomUsers(numberOfUsers)
 
         // Assert
         assertEquals(false, result.isSuccessful)

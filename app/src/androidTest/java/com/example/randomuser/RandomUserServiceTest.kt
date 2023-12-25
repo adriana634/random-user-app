@@ -23,7 +23,8 @@ class RandomUserServiceTest {
     @Test
     fun getRandomUsers_shouldReturnValidResponse() = runBlocking {
         try {
-            val response = randomUserService.getRandomUsers()
+            val numberOfUsers = 5
+            val response = randomUserService.getRandomUsers(numberOfUsers)
 
             assertTrue(response.isSuccessful)
 
