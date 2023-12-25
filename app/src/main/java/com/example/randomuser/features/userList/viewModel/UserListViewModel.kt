@@ -7,9 +7,14 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asFlow
+import androidx.lifecycle.viewModelScope
 import com.example.randomuser.manager.RandomUserManager
 import com.example.randomuser.model.User
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
 
@@ -56,5 +61,24 @@ class UserListViewModel(private val randomUserManager: RandomUserManager) : View
     fun onUserDetailsScreenNavigated() {
         Log.d(TAG, "Navigating to UserDetailsScreen")
         _navigateToUserDetails = null
+    }
+
+    fun getUsersWithQuery(query: String): MutableLiveData<List<User>> {
+        val filteredUsers = MutableLiveData<List<User>>()
+
+        viewModelScope.launch {
+            combine(_users.asFlow(), MutableStateFlow(query)) { userList, searchQuery ->
+                if (searchQuery.isBlank()) {
+                    userList
+                } else {
+                    userList.filter { user ->
+                        user.name.contains(searchQuery, ignoreCase = true) ||
+                                user.email.contains(searchQuery, ignoreCase = true)
+                    }
+                }
+            }.collect { filteredUsers.value = it }
+        }
+
+        return filteredUsers
     }
 }

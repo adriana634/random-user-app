@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">RandomUser</string>
     <string name="user_list_item_image_content_description">user profile picture</string>
+    <string name="search_by_name_or_email">Search by name or email</string>
 </resources>
