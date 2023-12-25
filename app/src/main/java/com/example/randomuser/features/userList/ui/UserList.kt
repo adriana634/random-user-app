@@ -13,10 +13,10 @@ import com.example.randomuser.ui.theme.RandomUserTheme
  * @param users The list of users to be displayed.
  */
 @Composable
-fun UserList(users: List<User>) {
+fun UserList(users: List<User>, onItemClick: ((User) -> Unit)? = null) {
     LazyColumn {
         items(users) { user ->
-            UserListItem(user)
+            UserListItem(user, onItemClick)
         }
     }
 }

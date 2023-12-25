@@ -1,6 +1,7 @@
 package com.example.randomuser.features.userList.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -31,11 +32,12 @@ import com.example.randomuser.ui.theme.RandomUserTheme
  * @param user The user data to be displayed.
  */
 @Composable
-fun UserListItem(user: User) {
+fun UserListItem(user: User, onItemClick: ((User) -> Unit)? = null) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(16.dp)
+            .clickable { onItemClick?.invoke(user) },
         verticalAlignment = Alignment.CenterVertically
     ) {
         AsyncImage(
@@ -61,7 +63,7 @@ fun UserListItem(user: User) {
 fun UserListItemPreview() {
     RandomUserTheme {
         val sampleUser = getSampleUser()
-        UserListItem(user = sampleUser)
+        UserListItem(user = sampleUser, onItemClick = null)
     }
 }
 

@@ -1,6 +1,9 @@
 package com.example.randomuser.features.userList.viewModel
 
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -22,8 +25,10 @@ class UserListViewModel(private val randomUserManager: RandomUserManager) : View
     }
 
     private val _users = MutableLiveData<List<User>>()
+    private var _navigateToUserDetails by mutableStateOf<User?>(null)
 
     val users: LiveData<List<User>> get() = _users
+    val navigateToUserDetails: User? get() = _navigateToUserDetails
 
     suspend fun loadUsersAsync() {
         try {
@@ -41,5 +46,15 @@ class UserListViewModel(private val randomUserManager: RandomUserManager) : View
         } catch (e: Exception) {
             Log.e(TAG, "Unexpected error", e)
         }
+    }
+
+    fun onUserItemClick(user: User) {
+        Log.d(TAG, "User clicked: ${user.email}")
+        _navigateToUserDetails = user
+    }
+
+    fun onUserDetailsScreenNavigated() {
+        Log.d(TAG, "Navigating to UserDetailsScreen")
+        _navigateToUserDetails = null
     }
 }
