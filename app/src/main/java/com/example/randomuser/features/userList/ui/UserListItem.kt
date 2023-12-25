@@ -23,8 +23,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.randomuser.R
-import com.example.randomuser.features.userList.model.User
+import com.example.randomuser.model.User
 import com.example.randomuser.ui.theme.RandomUserTheme
+import java.util.Date
 
 /**
  * Composable function representing an individual user item in the list.
@@ -68,5 +69,5 @@ fun UserListItemPreview() {
 }
 
 private fun getSampleUser(): User {
-    return User("John Doe", "john.doe@example.com", "https://placehold.co/52x52/png")
+    return User("John Doe", "john.doe@example.com", "male", "https://placehold.co/52x52/png", Date(), "123456789")
 }

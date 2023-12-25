@@ -1,7 +1,7 @@
 package com.example.randomuser.manager
 
 import android.util.Log
-import com.example.randomuser.features.userList.model.User
+import com.example.randomuser.model.User
 import com.example.randomuser.service.RandomUser
 import com.example.randomuser.service.RandomUserResponse
 import com.example.randomuser.service.RandomUserService
@@ -60,13 +60,16 @@ class RandomUserManager(private val randomUserService: RandomUserService) {
     }
 
     /**
-     * Filters out duplicate users and maps them to [User] objects.
+     * Filters out duplicate users, applies the age filter, and maps them to [User] objects.
      *
      * @param randomUsers The list of [RandomUser] objects.
-     * @return The list of mapped [User] objects without duplicates.
+     * @return The list of mapped [User] objects without duplicates and with age >= 18.
      */
     private fun filterAndMapUsers(randomUsers: List<RandomUser>?): List<User> {
-        val distinctUsers = randomUsers?.distinctBy { it.email }
+        val distinctUsers = randomUsers
+            ?.distinctBy { it.email }
+            ?.filter { it.registered.age >= 18 }
+
         return distinctUsers?.map { mapToUser(it) } ?: emptyList()
     }
 
@@ -80,7 +83,10 @@ class RandomUserManager(private val randomUserService: RandomUserService) {
         return User(
             "${randomUser.name.title} ${randomUser.name.first} ${randomUser.name.last}",
             randomUser.email,
-            randomUser.picture.thumbnail
+            randomUser.gender,
+            randomUser.picture.thumbnail,
+            randomUser.registered.date,
+            randomUser.cell
         )
     }
 

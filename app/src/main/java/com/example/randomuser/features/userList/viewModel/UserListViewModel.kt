@@ -7,8 +7,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.randomuser.features.userList.model.User
 import com.example.randomuser.manager.RandomUserManager
+import com.example.randomuser.model.User
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.IOException
@@ -21,7 +21,7 @@ class UserListViewModel(private val randomUserManager: RandomUserManager) : View
     companion object {
         // TAG for logging purposes.
         private val TAG = UserListViewModel::class.java.simpleName
-        private const val INITIAL_USER_COUNT = 20
+        private const val INITIAL_USER_COUNT = 100
     }
 
     private val _users = MutableLiveData<List<User>>()

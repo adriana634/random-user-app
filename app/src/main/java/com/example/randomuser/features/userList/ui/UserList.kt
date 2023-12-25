@@ -4,8 +4,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.randomuser.features.userList.model.User
+import com.example.randomuser.model.User
 import com.example.randomuser.ui.theme.RandomUserTheme
+import java.util.Date
 
 /**
  * Composable function to display a list of users.
@@ -32,8 +33,8 @@ fun UserListPreview() {
 
 private fun getSampleUserList(): List<User> {
     return listOf(
-        User("John Doe", "john.doe@example.com", "https://placehold.co/52x52/png"),
-        User("Jane Doe", "jane.doe@example.com", "https://placehold.co/52x52/png"),
-        User("Bob Smith", "bob.smith@example.com", "https://placehold.co/52x52/png")
+        User("John Doe", "john.doe@example.com", "male", "https://placehold.co/52x52/png", Date(), "123456789"),
+        User("Jane Doe", "jane.doe@example.com", "female", "https://placehold.co/52x52/png", Date(), "123456789"),
+        User("Bob Smith", "bob.smith@example.com", "male", "https://placehold.co/52x52/png", Date(), "123456789")
     )
 }
