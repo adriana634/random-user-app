@@ -11,12 +11,12 @@ import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.example.randomuser.manager.RandomUserManager
 import com.example.randomuser.model.User
+import com.example.randomuser.utils.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.IOException
 
 /**
  * ViewModel class for managing the list of users.
@@ -40,30 +40,41 @@ class UserListViewModel(private val randomUserManager: RandomUserManager) : View
     val users: LiveData<List<UserListItemViewModel>> get() = _users
     val navigateToUserDetails: String? get() = _navigateToUserDetails
 
+    /**
+     * Asynchronously loads users from the network if not already loaded.
+     * If the users are already loaded, this method does nothing.
+     */
     suspend fun loadUsersAsync() {
         if (usersLoaded) {
             return
         }
 
-        try {
-            val response = withContext(Dispatchers.IO) {
-                randomUserManager.getRandomUsers(INITIAL_USER_COUNT)
-            }
-
-            if (response.isSuccessful) {
-                _allUserModels.addAll(response.body() ?: emptyList())
-
-                _users.value = _allUserModels.map { user ->
-                    UserListItemViewModel(user, this)
+        viewModelScope.launch {
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    randomUserManager.getRandomUsers(INITIAL_USER_COUNT)
                 }
-                usersLoaded = true
-            } else {
-                Log.e(TAG, "API error: ${response.code()} ${response.message()}")
+
+                withContext(Dispatchers.Main) {
+                    when (result) {
+                        is Result.Success -> {
+                            val users = result.data
+
+                            _allUserModels.addAll(users)
+
+                            _users.value = _allUserModels.map { user ->
+                                UserListItemViewModel(user, this@UserListViewModel)
+                            }
+                            usersLoaded = true
+                        }
+                        is Result.Error -> {
+                            Log.e(TAG, "API error: ${result.message}")
+                        }
+                    }
+                }
+            } catch (error: Throwable) {
+                Log.e(TAG, "Unexpected error", error)
             }
-        } catch (e: IOException) {
-            Log.e(TAG, "Network error", e)
-        } catch (e: Exception) {
-            Log.e(TAG, "Unexpected error", e)
         }
     }
 

@@ -6,9 +6,7 @@ import com.example.randomuser.model.User
 import com.example.randomuser.service.RandomUser
 import com.example.randomuser.service.RandomUserResponse
 import com.example.randomuser.service.RandomUserService
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.ResponseBody
-import okhttp3.ResponseBody.Companion.toResponseBody
+import com.example.randomuser.utils.Result
 import retrofit2.Response
 import java.io.IOException
 
@@ -19,59 +17,9 @@ import java.io.IOException
  */
 class RandomUserManager(private val randomUserService: RandomUserService) {
 
-    /**
-     * TAG for logging purposes.
-     */
     companion object {
+        // TAG for logging purposes.
         private val TAG = RandomUserManager::class.java.simpleName
-    }
-
-    /**
-     * Fetches random users from the network.
-     *
-     * @return Response containing the list of users or an error response.
-     */
-    suspend fun getRandomUsers(numberOfUsers: Int): Response<List<User>> {
-        return try {
-            val response = randomUserService.getRandomUsers(numberOfUsers)
-            handleResponse(response)
-        } catch (e: IOException) {
-            Log.e(TAG, "Network error", e)
-            Response.error(500, createErrorResponse("Network error"))
-        } catch (e: Exception) {
-            Log.e(TAG, "Unexpected error", e)
-            Response.error(500, createErrorResponse("Unexpected error"))
-        }
-    }
-
-    /**
-     * Handles the network response and maps it to a custom result.
-     *
-     * @param response The network response to be handled.
-     * @return Response containing the list of users or an error response.
-     */
-    private fun handleResponse(response: Response<RandomUserResponse>): Response<List<User>> {
-        return if (response.isSuccessful) {
-            val users = filterAndMapUsers(response.body()?.results)
-            Response.success(users)
-        } else {
-            Log.e(TAG, "API error: ${response.code()} ${response.message()}")
-            Response.error(response.code(), createErrorResponse("API error"))
-        }
-    }
-
-    /**
-     * Filters out duplicate users, applies the age filter, and maps them to [User] objects.
-     *
-     * @param randomUsers The list of [RandomUser] objects.
-     * @return The list of mapped [User] objects without duplicates and with age >= 18.
-     */
-    private fun filterAndMapUsers(randomUsers: List<RandomUser>?): List<User> {
-        val distinctUsers = randomUsers
-            ?.distinctBy { it.email }
-            ?.filter { it.registered.age >= 18 }
-
-        return distinctUsers?.map { mapToUser(it) } ?: emptyList()
     }
 
     /**
@@ -97,12 +45,50 @@ class RandomUserManager(private val randomUserService: RandomUserService) {
     }
 
     /**
-     * Creates an error response body with the given error message.
+     * Filters out duplicate users, applies the age filter, and maps them to [User] objects.
      *
-     * @param errorMessage The error message.
-     * @return The error response body.
+     * @param randomUsers The list of [RandomUser] objects.
+     * @return The list of mapped [User] objects without duplicates and with age >= 18.
      */
-    private fun createErrorResponse(errorMessage: String): ResponseBody {
-        return "$errorMessage".toResponseBody("application/json".toMediaTypeOrNull())
+    private fun filterAndMapUsers(randomUsers: List<RandomUser>?): List<User> {
+        val distinctUsers = randomUsers
+            ?.distinctBy { it.email }
+            ?.filter { it.registered.age >= 18 }
+
+        return distinctUsers?.map { mapToUser(it) } ?: emptyList()
+    }
+
+    /**
+     * Handles the network response and maps it to a Result.
+     *
+     * @param response The network response to be handled.
+     * @return Result containing either the list of users or an error message.
+     */
+    private fun handleResponse(response: Response<RandomUserResponse>): Result<List<User>> {
+        return if (response.isSuccessful) {
+            val users = filterAndMapUsers(response.body()?.results)
+            Result.Success(users)
+        } else {
+            Log.e(TAG, "API error: ${response.code()} ${response.message()}")
+            Result.Error("Failed to fetch users. Please try again later.")
+        }
+    }
+
+    /**
+     * Fetches random users from the network.
+     *
+     * @return Result containing either the list of users or an error message.
+     */
+    suspend fun getRandomUsers(numberOfUsers: Int): Result<List<User>> {
+        return try {
+            val response = randomUserService.getRandomUsers(numberOfUsers)
+            handleResponse(response)
+        } catch (e: IOException) {
+            Log.e(TAG, "Network error", e)
+            Result.Error("Failed to fetch users. Please try again later.")
+        } catch (e: Exception) {
+            Log.e(TAG, "Unexpected error", e)
+            Result.Error("An unexpected error occurred.")
+        }
     }
 }

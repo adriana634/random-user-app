@@ -5,9 +5,10 @@ import com.example.randomuser.manager.RandomUserManager
 import com.example.randomuser.service.RandomUserResponse
 import com.example.randomuser.service.RandomUserService
 import com.example.randomuser.service.RetrofitClient
+import com.example.randomuser.utils.Result
 import junit.framework.TestCase.assertNotNull
+import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -34,9 +35,9 @@ class RandomUserManagerInstrumentedTest {
         val result = randomUserManager.getRandomUsers(numberOfUsers)
 
         // Assert
-        assertEquals(true, result.isSuccessful)
+        assertTrue(result is Result.Success)
 
-        val mappedUsers = result.body()
+        val mappedUsers = (result as Result.Success).data
         assertNotNull("Mapped users should not be null", mappedUsers)
         assertNotEquals("Mapped users should not be empty", 0, mappedUsers?.size)
 
@@ -54,6 +55,6 @@ class RandomUserManagerInstrumentedTest {
         val result = fakeErrorRandomUserManager.getRandomUsers(numberOfUsers)
 
         // Assert
-        assertEquals(false, result.isSuccessful)
+        assertTrue(result is Result.Error)
     }
 }
