@@ -1,7 +1,7 @@
 package com.example.randomuser.manager
 
 import android.util.Log
-import com.example.randomuser.model.Location
+import com.example.randomuser.mapping.mapToUser
 import com.example.randomuser.model.User
 import com.example.randomuser.service.RandomUser
 import com.example.randomuser.service.RandomUserResponse
@@ -24,28 +24,6 @@ class RandomUserManager @Inject constructor(private val randomUserService: Rando
     }
 
     /**
-     * Maps a [RandomUser] to a User.
-     *
-     * @param randomUser The [RandomUser] to be mapped.
-     * @return The mapped [User].
-     */
-    private fun mapToUser(randomUser: RandomUser): User {
-        val name ="${randomUser.name.title} ${randomUser.name.first} ${randomUser.name.last}"
-        val location = Location(randomUser.location.coordinates.latitude, randomUser.location.coordinates.longitude)
-
-        return User(
-            name,
-            randomUser.email,
-            randomUser.gender,
-            randomUser.picture.thumbnail,
-            randomUser.picture.medium,
-            randomUser.registered.date,
-            randomUser.cell,
-            location
-        )
-    }
-
-    /**
      * Filters out duplicate users, applies the age filter, and maps them to [User] objects.
      *
      * @param randomUsers The list of [RandomUser] objects.
@@ -56,7 +34,7 @@ class RandomUserManager @Inject constructor(private val randomUserService: Rando
             ?.distinctBy { it.email }
             ?.filter { it.registered.age >= 18 }
 
-        return distinctUsers?.map { mapToUser(it) } ?: emptyList()
+        return distinctUsers?.map { it.mapToUser() } ?: emptyList()
     }
 
     /**
