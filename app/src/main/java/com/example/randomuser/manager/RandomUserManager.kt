@@ -9,13 +9,14 @@ import com.example.randomuser.service.RandomUserService
 import com.example.randomuser.utils.Result
 import retrofit2.Response
 import java.io.IOException
+import javax.inject.Inject
 
 /**
  * Manager class responsible for handling network operations related to random users.
  *
  * @property randomUserService The service interface for making network requests related to random users.
  */
-class RandomUserManager(private val randomUserService: RandomUserService) {
+class RandomUserManager @Inject constructor(private val randomUserService: RandomUserService) {
 
     companion object {
         // TAG for logging purposes.

@@ -17,15 +17,20 @@ import com.example.randomuser.features.userList.ui.UserListScreen
 import com.example.randomuser.features.userList.viewModel.UserListViewModel
 import com.example.randomuser.features.userList.viewModel.UserListViewModelFactory
 import com.example.randomuser.ui.theme.RandomUserTheme
+import javax.inject.Inject
 
 class MainActivity : ComponentActivity() {
-    private val viewModelFactory = UserListViewModelFactory()
+    @Inject
+    lateinit var userListViewModelFactory: UserListViewModelFactory
+
     private val userListViewModel by lazy {
-        ViewModelProvider(this, viewModelFactory)[UserListViewModel::class.java]
+        ViewModelProvider(this, userListViewModelFactory)[UserListViewModel::class.java]
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        (application as RandomUserApp).randomUserComponent.inject(this)
 
         setContent {
             RandomUserTheme {
