@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -14,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -26,6 +28,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.randomuser.R
 import com.example.randomuser.features.userList.viewModel.UserListViewModel
 import com.example.randomuser.ui.theme.RandomUserTheme
+import kotlinx.coroutines.launch
 
 /**
  * Composable function for the screen displaying a list of users.
@@ -36,9 +39,16 @@ import com.example.randomuser.ui.theme.RandomUserTheme
 fun UserListScreen(navController: NavController, userListViewModel: UserListViewModel = viewModel()) {
     var searchQuery by remember { mutableStateOf("") }
     val users by userListViewModel.getUsersWithQuery(searchQuery).observeAsState(initial = emptyList())
+    val lazyListState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+    var isLoading by remember { mutableStateOf(userListViewModel.isLoading) }
 
     LaunchedEffect(userListViewModel) {
         userListViewModel.loadUsersAsync()
+    }
+
+    LaunchedEffect(userListViewModel.isLoading) {
+        isLoading = userListViewModel.isLoading
     }
 
     val navigateToUserDetails by rememberUpdatedState(userListViewModel.navigateToUserDetails)
@@ -67,7 +77,16 @@ fun UserListScreen(navController: NavController, userListViewModel: UserListView
                     .padding(8.dp)
             )
 
-            UserList(users)
+            UserList(users, lazyListState,
+                onNextPage = {
+                    coroutineScope.launch {
+                        userListViewModel.loadNextUsersAsync()
+                    }
+            },  onPreviousPage = { page ->
+                    coroutineScope.launch {
+                        userListViewModel.loadPreviousUsersAsync(page)
+                    }
+            }, isLoading = isLoading)
         }
     }
 }

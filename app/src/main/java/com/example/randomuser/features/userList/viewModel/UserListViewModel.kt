@@ -4,7 +4,6 @@ import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
@@ -28,44 +27,78 @@ class UserListViewModel(private val randomUserManager: RandomUserManager) : View
         // TAG for logging purposes.
         private val TAG = UserListViewModel::class.java.simpleName
         private const val INITIAL_USER_COUNT = 100
+        private const val FIRST_PAGE = 1
+        private const val PAGE_INCREMENT = 1
+        private const val MAX_PAGES_IN_MEMORY = 3
     }
 
-    private var usersLoaded = false
+    private var _usersLoaded = false
+    private var _isLoading = false
+    private var _currentPage = FIRST_PAGE
 
-    private val _users = MutableLiveData<List<UserListItemViewModel>>()
+    // Maintain a mapping between user emails and their corresponding page indices
+    private val _userPageIndexMap = mutableMapOf<String, Int>()
+
+    // Maintain a set of loaded page indices
+    private val _loadedPages = mutableSetOf<Int>()
+
+    private var _allUserModels = mutableListOf<User>()
+    private val _usersViewModels = MutableLiveData<List<UserListItemViewModel>>()
     private var _navigateToUserDetails by mutableStateOf<String?>(null)
 
-    private val _allUserModels = mutableListOf<User>()
+    private val clearPagesLock = Any()
 
-    val users: LiveData<List<UserListItemViewModel>> get() = _users
     val navigateToUserDetails: String? get() = _navigateToUserDetails
+    val isLoading: Boolean get() = _isLoading
 
     /**
-     * Asynchronously loads users from the network if not already loaded.
-     * If the users are already loaded, this method does nothing.
+     * Asynchronously loads users from the network.
+     *
+     * @param page The page number to load.
      */
-    suspend fun loadUsersAsync() {
-        if (usersLoaded) {
+    private suspend fun loadUsersAsync(page: Int) {
+        if (_isLoading) {
             return
+        }
+
+        Log.i(TAG, "Loading users, page: $page")
+
+        _isLoading = true
+
+        // If loading the first page, reset the state
+        if (page == FIRST_PAGE) {
+            _usersLoaded = false
         }
 
         viewModelScope.launch {
             try {
                 val result = withContext(Dispatchers.IO) {
-                    randomUserManager.getRandomUsers(INITIAL_USER_COUNT)
+                    randomUserManager.getRandomUsers(INITIAL_USER_COUNT, page)
                 }
 
                 withContext(Dispatchers.Main) {
                     when (result) {
                         is Result.Success -> {
-                            val users = result.data
+                            val newUsers = result.data
 
-                            _allUserModels.addAll(users)
+                            _allUserModels.addAll(newUsers)
 
-                            _users.value = _allUserModels.map { user ->
-                                UserListItemViewModel(user, this@UserListViewModel)
+                            newUsers.forEach { user ->
+                                _userPageIndexMap[user.email] = page
                             }
-                            usersLoaded = true
+
+                            _usersViewModels.value = _allUserModels.map { user ->
+                                UserListItemViewModel(user,this@UserListViewModel)
+                            }
+
+                            // If loading the first page, mark as loaded
+                            if (page == FIRST_PAGE) {
+                                _usersLoaded = true
+                            }
+                            _currentPage = page
+
+                            // Update the set of loaded pages
+                            _loadedPages.add(page)
                         }
                         is Result.Error -> {
                             Log.e(TAG, "API error: ${result.message}")
@@ -74,8 +107,74 @@ class UserListViewModel(private val randomUserManager: RandomUserManager) : View
                 }
             } catch (error: Throwable) {
                 Log.e(TAG, "Unexpected error", error)
+            } finally {
+                _isLoading = false
             }
         }
+    }
+
+    // Clear existing users when reaching the maximum number of pages in memory
+    private fun clearPagesFromMemoryIfNeeded() {
+        synchronized(clearPagesLock) {
+            // Check if the number of distinct page indices exceeds the maximum allowed
+            if (_loadedPages.count() > MAX_PAGES_IN_MEMORY) {
+                Log.i(TAG, "Clearing pages from memory")
+
+                val distinctPageIndices = _userPageIndexMap.values.toSet()
+
+                // Determine the oldest page index
+                val oldestPageIndex = distinctPageIndices.minOrNull() ?: return
+
+                // Update the set of loaded pages before removing users
+                _loadedPages.remove(oldestPageIndex)
+
+                // Clear the view models associated with the oldest page index(s)
+                _usersViewModels.value = _usersViewModels.value?.filterNot { viewModel ->
+                    val email = viewModel.email
+                    val userPageIndex = _userPageIndexMap[email]
+                    if (userPageIndex == oldestPageIndex) {
+                        // Remove the entry from the userPageIndexMap when removing the user
+                        _userPageIndexMap.remove(email)
+                    }
+                    userPageIndex == oldestPageIndex
+                } ?: emptyList()
+
+                // Clear the users associated with the oldest page index(s)
+                _allUserModels = _allUserModels.filterNot { user ->
+                    val userPageIndex = _userPageIndexMap[user.email]
+                    if (userPageIndex == oldestPageIndex) {
+                        // Remove the entry from the userPageIndexMap when removing the user
+                        _userPageIndexMap.remove(user.email)
+                    }
+                    userPageIndex == oldestPageIndex
+                }.toMutableList()
+            }
+        }
+    }
+
+    suspend fun loadUsersAsync() {
+        loadUsersAsync(FIRST_PAGE)
+        loadNextUsersAsync()
+        loadNextUsersAsync()
+        loadNextUsersAsync()
+    }
+
+    suspend fun loadNextUsersAsync() {
+        if (_isLoading) {
+            return
+        }
+
+        loadUsersAsync(_currentPage + PAGE_INCREMENT)
+        clearPagesFromMemoryIfNeeded()
+    }
+
+    suspend fun loadPreviousUsersAsync(page: Int) {
+        // If the current page is the first page or it's already loaded, return early.
+        if (_currentPage == FIRST_PAGE || _loadedPages.contains(page - PAGE_INCREMENT)) {
+            return
+        }
+
+        loadUsersAsync(page)
     }
 
     override fun onUserItemClick(email: String) {
@@ -96,7 +195,7 @@ class UserListViewModel(private val randomUserManager: RandomUserManager) : View
         val filteredUsers = MutableLiveData<List<UserListItemViewModel>>()
 
         viewModelScope.launch {
-            combine(_users.asFlow(), MutableStateFlow(query)) { users, searchQuery ->
+            combine(_usersViewModels.asFlow(), MutableStateFlow(query)) { users, searchQuery ->
                 if (searchQuery.isBlank()) {
                     users
                 } else {

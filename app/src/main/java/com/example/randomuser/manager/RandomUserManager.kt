@@ -58,9 +58,9 @@ class RandomUserManager @Inject constructor(private val randomUserService: Rando
      *
      * @return Result containing either the list of users or an error message.
      */
-    suspend fun getRandomUsers(numberOfUsers: Int): Result<List<User>> {
+    suspend fun getRandomUsers(numberOfUsers: Int, page: Int): Result<List<User>> {
         return try {
-            val response = randomUserService.getRandomUsers(numberOfUsers)
+            val response = randomUserService.getRandomUsers(numberOfUsers, page, "exampleSeed")
             handleResponse(response)
         } catch (e: IOException) {
             Log.e(TAG, "Network error", e)
