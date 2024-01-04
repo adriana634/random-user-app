@@ -30,6 +30,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.randomuser.features.userList.viewModel.UserListItemViewModel
 import com.example.randomuser.model.User
+import com.example.randomuser.navigation.NavControllerNavigator
+import com.example.randomuser.navigation.Navigator
 import com.example.randomuser.ui.theme.RandomUserTheme
 import java.util.Date
 
@@ -46,6 +48,7 @@ import java.util.Date
  */
 @Composable
 fun UserList(
+    navigator: Navigator,
     users: List<UserListItemViewModel>,
     lazyListState: LazyListState,
     onNextPage: () -> Unit,
@@ -79,7 +82,7 @@ fun UserList(
 
     LazyColumn(state = lazyListState) {
         items(users) { user ->
-            UserListItem(user)
+            UserListItem(navigator, user)
         }
 
         if (isLoading) {
@@ -133,7 +136,7 @@ fun UserListPreview() {
     val lazyListState = rememberLazyListState()
     RandomUserTheme {
         val sampleUsers = getSampleUserList()
-        UserList(users = sampleUsers, lazyListState, onNextPage = {}, onPreviousPage = {}, false)
+        UserList(NavControllerNavigator(), users = sampleUsers, lazyListState, onNextPage = {}, onPreviousPage = {}, false)
     }
 }
 

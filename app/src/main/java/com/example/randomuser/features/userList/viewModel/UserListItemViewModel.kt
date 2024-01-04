@@ -3,8 +3,7 @@ package com.example.randomuser.features.userList.viewModel
 import com.example.randomuser.model.User
 
 class UserListItemViewModel(
-    private val user: User,
-    private val onUserItemClickListener: OnUserItemClickListener? = null
+    private val user: User
 ) {
 
     val name: String
@@ -15,8 +14,4 @@ class UserListItemViewModel(
 
     val pictureThumbnail: String
         get() = user.pictureThumbnail
-
-    fun onUserItemClick() {
-        onUserItemClickListener?.onUserItemClick(user.email)
-    }
 }

@@ -25,6 +25,8 @@ import coil.compose.AsyncImage
 import com.example.randomuser.R
 import com.example.randomuser.features.userList.viewModel.UserListItemViewModel
 import com.example.randomuser.model.User
+import com.example.randomuser.navigation.NavControllerNavigator
+import com.example.randomuser.navigation.Navigator
 import com.example.randomuser.ui.theme.RandomUserTheme
 import java.util.Date
 
@@ -34,12 +36,12 @@ import java.util.Date
  * @param user The user data to be displayed.
  */
 @Composable
-fun UserListItem(user: UserListItemViewModel) {
+fun UserListItem(navigator: Navigator, user: UserListItemViewModel) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .clickable { user.onUserItemClick() },
+            .clickable { navigator.navigateToUserDetails(user.email) },
         verticalAlignment = Alignment.CenterVertically
     ) {
         AsyncImage(
@@ -65,7 +67,7 @@ fun UserListItem(user: UserListItemViewModel) {
 fun UserListItemPreview() {
     RandomUserTheme {
         val sampleUser = getSampleUser()
-        UserListItem(user = sampleUser)
+        UserListItem(NavControllerNavigator(), user = sampleUser)
     }
 }
 

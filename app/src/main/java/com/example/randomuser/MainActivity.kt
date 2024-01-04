@@ -16,10 +16,15 @@ import com.example.randomuser.features.userDetails.ui.UserDetailsScreen
 import com.example.randomuser.features.userList.ui.UserListScreen
 import com.example.randomuser.features.userList.viewModel.UserListViewModel
 import com.example.randomuser.features.userList.viewModel.UserListViewModelFactory
+import com.example.randomuser.navigation.NavControllerNavigator
 import com.example.randomuser.ui.theme.RandomUserTheme
 import javax.inject.Inject
 
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var navControllerNavigator: NavControllerNavigator
+
     @Inject
     lateinit var userListViewModelFactory: UserListViewModelFactory
 
@@ -48,13 +53,14 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun AppNavigation() {
         val navController = rememberNavController()
+        navControllerNavigator.setNavController(navController)
 
         NavHost(
             navController = navController,
             startDestination = "userListScreen"
         ) {
             composable("userListScreen") {
-                UserListScreen(navController, userListViewModel)
+                UserListScreen(navControllerNavigator, userListViewModel)
             }
 
             composable("userDetailsScreen/{userEmail}") { backStackEntry ->

@@ -1,9 +1,6 @@
 package com.example.randomuser.features.userList.viewModel
 
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
@@ -20,8 +17,7 @@ import kotlinx.coroutines.withContext
 /**
  * ViewModel class for managing the list of users.
  */
-class UserListViewModel(private val randomUserManager: RandomUserManager) : ViewModel(),
-    OnUserItemClickListener {
+class UserListViewModel(private val randomUserManager: RandomUserManager) : ViewModel() {
 
     companion object {
         // TAG for logging purposes.
@@ -44,11 +40,9 @@ class UserListViewModel(private val randomUserManager: RandomUserManager) : View
 
     private var _allUserModels = mutableListOf<User>()
     private val _usersViewModels = MutableLiveData<List<UserListItemViewModel>>()
-    private var _navigateToUserDetails by mutableStateOf<String?>(null)
 
     private val clearPagesLock = Any()
 
-    val navigateToUserDetails: String? get() = _navigateToUserDetails
     val isLoading: Boolean get() = _isLoading
 
     /**
@@ -88,7 +82,7 @@ class UserListViewModel(private val randomUserManager: RandomUserManager) : View
                             }
 
                             _usersViewModels.value = _allUserModels.map { user ->
-                                UserListItemViewModel(user,this@UserListViewModel)
+                                UserListItemViewModel(user)
                             }
 
                             // If loading the first page, mark as loaded
@@ -175,16 +169,6 @@ class UserListViewModel(private val randomUserManager: RandomUserManager) : View
         }
 
         loadUsersAsync(page)
-    }
-
-    override fun onUserItemClick(email: String) {
-        Log.d(TAG, "User clicked: $email")
-        _navigateToUserDetails = email
-    }
-
-    fun onUserDetailsScreenNavigated() {
-        Log.d(TAG, "Navigating to UserDetailsScreen")
-        _navigateToUserDetails = null
     }
 
     fun findUserModelByEmail(email: String): User? {

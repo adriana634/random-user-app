@@ -16,17 +16,16 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.randomuser.R
 import com.example.randomuser.features.userList.viewModel.UserListViewModel
+import com.example.randomuser.navigation.NavControllerNavigator
+import com.example.randomuser.navigation.Navigator
 import com.example.randomuser.ui.theme.RandomUserTheme
 import kotlinx.coroutines.launch
 
@@ -36,7 +35,7 @@ import kotlinx.coroutines.launch
  * @param userListViewModel The ViewModel providing user data.
  */
 @Composable
-fun UserListScreen(navController: NavController, userListViewModel: UserListViewModel = viewModel()) {
+fun UserListScreen(navigator: Navigator, userListViewModel: UserListViewModel = viewModel()) {
     var searchQuery by remember { mutableStateOf("") }
     val users by userListViewModel.getUsersWithQuery(searchQuery).observeAsState(initial = emptyList())
     val lazyListState = rememberLazyListState()
@@ -49,12 +48,6 @@ fun UserListScreen(navController: NavController, userListViewModel: UserListView
 
     LaunchedEffect(userListViewModel.isLoading) {
         isLoading = userListViewModel.isLoading
-    }
-
-    val navigateToUserDetails by rememberUpdatedState(userListViewModel.navigateToUserDetails)
-    navigateToUserDetails?.let { email ->
-        navController.navigate("userDetailsScreen/${email}")
-        userListViewModel.onUserDetailsScreenNavigated()
     }
 
     Surface(
@@ -77,7 +70,7 @@ fun UserListScreen(navController: NavController, userListViewModel: UserListView
                     .padding(8.dp)
             )
 
-            UserList(users, lazyListState,
+            UserList(navigator, users, lazyListState,
                 onNextPage = {
                     coroutineScope.launch {
                         userListViewModel.loadNextUsersAsync()
@@ -95,7 +88,6 @@ fun UserListScreen(navController: NavController, userListViewModel: UserListView
 @Composable
 fun UserListScreenPreview() {
     RandomUserTheme {
-        val mockNavController = rememberNavController()
-        UserListScreen(mockNavController)
+        UserListScreen(NavControllerNavigator())
     }
 }
