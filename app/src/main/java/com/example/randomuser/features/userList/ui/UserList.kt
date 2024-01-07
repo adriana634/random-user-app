@@ -51,7 +51,7 @@ fun UserList(
     navigator: Navigator,
     users: List<UserListItemViewModel>,
     lazyListState: LazyListState,
-    onNextPage: () -> Unit,
+    onNextPage: (page: Int) -> Unit,
     onPreviousPage: (page: Int) -> Unit,
     isLoading: Boolean,
     preFetchPages: Int = 4,
@@ -73,7 +73,7 @@ fun UserList(
             if (currentPage < previousPage) {
                 onPreviousPage(currentPage)
             } else if (visibleItemIndex + lazyListState.layoutInfo.visibleItemsInfo.size >= totalItemCount - preFetchPages) {
-                onNextPage()
+                onNextPage(currentPage)
             }
 
             previousPage = currentPage

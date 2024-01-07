@@ -9,6 +9,8 @@ import com.example.randomuser.manager.RandomUserManager
 import com.example.randomuser.model.User
 import com.example.randomuser.utils.Result
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
@@ -25,12 +27,11 @@ class UserListViewModel(private val randomUserManager: RandomUserManager) : View
         private const val INITIAL_USER_COUNT = 100
         private const val FIRST_PAGE = 1
         private const val PAGE_INCREMENT = 1
-        private const val MAX_PAGES_IN_MEMORY = 3
+        private const val MAX_PAGES_IN_MEMORY = 4
     }
 
     private var _usersLoaded = false
     private var _isLoading = false
-    private var _currentPage = FIRST_PAGE
 
     // Maintain a mapping between user emails and their corresponding page indices
     private val _userPageIndexMap = mutableMapOf<String, Int>()
@@ -51,13 +52,7 @@ class UserListViewModel(private val randomUserManager: RandomUserManager) : View
      * @param page The page number to load.
      */
     private suspend fun loadUsersAsync(page: Int) {
-        if (_isLoading) {
-            return
-        }
-
         Log.i(TAG, "Loading users, page: $page")
-
-        _isLoading = true
 
         // If loading the first page, reset the state
         if (page == FIRST_PAGE) {
@@ -89,7 +84,6 @@ class UserListViewModel(private val randomUserManager: RandomUserManager) : View
                             if (page == FIRST_PAGE) {
                                 _usersLoaded = true
                             }
-                            _currentPage = page
 
                             // Update the set of loaded pages
                             _loadedPages.add(page)
@@ -101,8 +95,6 @@ class UserListViewModel(private val randomUserManager: RandomUserManager) : View
                 }
             } catch (error: Throwable) {
                 Log.e(TAG, "Unexpected error", error)
-            } finally {
-                _isLoading = false
             }
         }
     }
@@ -147,28 +139,75 @@ class UserListViewModel(private val randomUserManager: RandomUserManager) : View
     }
 
     suspend fun loadUsersAsync() {
-        loadUsersAsync(FIRST_PAGE)
-        loadNextUsersAsync()
-        loadNextUsersAsync()
-        loadNextUsersAsync()
+        try {
+            _isLoading = true
+
+            val deferredPages = (FIRST_PAGE..MAX_PAGES_IN_MEMORY).map { page ->
+                viewModelScope.async { loadUsersAsync(page) }
+            }
+
+            // Wait for all deferred operations to complete
+            deferredPages.awaitAll()
+        } finally {
+            _isLoading = false
+        }
     }
 
-    suspend fun loadNextUsersAsync() {
-        if (_isLoading) {
+    suspend fun loadNextUsersAsync(currentPage: Int) {
+        try {
+            _isLoading = true
+
+            val loadedPagesSet = _loadedPages.toHashSet()
+
+            // Determine the range of pages to load
+            val pagesToLoad = (currentPage + PAGE_INCREMENT)..(currentPage + MAX_PAGES_IN_MEMORY * PAGE_INCREMENT)
+
+            val deferredPages = pagesToLoad.mapNotNull { nextPage ->
+                if (nextPage !in loadedPagesSet) {
+                    viewModelScope.async { loadUsersAsync(nextPage) }
+                } else {
+                    null
+                }
+            }
+
+            // Wait for all deferred operations to complete
+            deferredPages.awaitAll()
+
+            clearPagesFromMemoryIfNeeded()
+        } finally {
+            _isLoading = false
+        }
+    }
+
+    suspend fun loadPreviousUsersAsync(currentPage: Int) {
+        // If the current page is beyond the firsts pages or it's already loaded, return early.
+        if (currentPage > FIRST_PAGE + 3 || _loadedPages.contains(currentPage - PAGE_INCREMENT)) {
             return
         }
 
-        loadUsersAsync(_currentPage + PAGE_INCREMENT)
-        clearPagesFromMemoryIfNeeded()
-    }
+        try {
+            _isLoading = true
 
-    suspend fun loadPreviousUsersAsync(page: Int) {
-        // If the current page is the first page or it's already loaded, return early.
-        if (_currentPage == FIRST_PAGE || _loadedPages.contains(page - PAGE_INCREMENT)) {
-            return
+            // Determine the range of pages to load
+            val pagesToLoad = (currentPage - MAX_PAGES_IN_MEMORY * PAGE_INCREMENT)..<currentPage
+
+            val loadedPagesSet = _loadedPages.toHashSet()
+
+            val deferredPages = pagesToLoad.mapNotNull { previousPage ->
+                if (previousPage !in loadedPagesSet) {
+                    viewModelScope.async { loadUsersAsync(previousPage) }
+                } else {
+                    null
+                }
+            }
+
+            // Wait for all deferred operations to complete
+            deferredPages.awaitAll()
+
+            clearPagesFromMemoryIfNeeded()
+        } finally {
+            _isLoading = false
         }
-
-        loadUsersAsync(page)
     }
 
     fun findUserModelByEmail(email: String): User? {

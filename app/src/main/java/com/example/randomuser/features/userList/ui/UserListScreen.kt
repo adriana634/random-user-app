@@ -71,9 +71,9 @@ fun UserListScreen(navigator: Navigator, userListViewModel: UserListViewModel = 
             )
 
             UserList(navigator, users, lazyListState,
-                onNextPage = {
+                onNextPage = { page ->
                     coroutineScope.launch {
-                        userListViewModel.loadNextUsersAsync()
+                        userListViewModel.loadNextUsersAsync(page)
                     }
             },  onPreviousPage = { page ->
                     coroutineScope.launch {
