@@ -7,7 +7,6 @@ import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.example.randomuser.manager.RandomUserManager
 import com.example.randomuser.model.User
-import com.example.randomuser.utils.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -66,31 +65,26 @@ class UserListViewModel(private val randomUserManager: RandomUserManager) : View
                 }
 
                 withContext(Dispatchers.Main) {
-                    when (result) {
-                        is Result.Success -> {
-                            val newUsers = result.data
+                    result.onSuccess { newUsers ->
+                        _allUserModels.addAll(newUsers)
 
-                            _allUserModels.addAll(newUsers)
-
-                            newUsers.forEach { user ->
-                                _userPageIndexMap[user.email] = page
-                            }
-
-                            _usersViewModels.value = _allUserModels.map { user ->
-                                UserListItemViewModel(user)
-                            }
-
-                            // If loading the first page, mark as loaded
-                            if (page == FIRST_PAGE) {
-                                _usersLoaded = true
-                            }
-
-                            // Update the set of loaded pages
-                            _loadedPages.add(page)
+                        newUsers.forEach { user ->
+                            _userPageIndexMap[user.email] = page
                         }
-                        is Result.Error -> {
-                            Log.e(TAG, "API error: ${result.message}")
+
+                        _usersViewModels.value = _allUserModels.map { user ->
+                            UserListItemViewModel(user)
                         }
+
+                        // If loading the first page, mark as loaded
+                        if (page == FIRST_PAGE) {
+                            _usersLoaded = true
+                        }
+
+                        // Update the set of loaded pages
+                        _loadedPages.add(page)
+                    }.onError { error ->
+                        Log.e(TAG, "API error: $error")
                     }
                 }
             } catch (error: Throwable) {
