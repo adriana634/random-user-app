@@ -30,7 +30,7 @@ fun AppNavigation(navControllerNavigator: NavControllerNavigator, userListViewMo
             val userEmail = backStackEntry.arguments?.getString(AppRouteParameter.EmailParameter.name)
             val user = userEmail?.let { userListViewModel.findUserModelByEmail(it) }
             user?.let {
-                UserDetailsScreen(user = it)
+                UserDetailsScreen(navigator = navControllerNavigator, user = it)
             }
         }
     }

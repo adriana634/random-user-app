@@ -17,6 +17,10 @@ class NavControllerNavigator @Inject constructor() : Navigator {
     fun setNavController(navController: NavController) {
         this.navController = navController
     }
+    override fun goBack() {
+        Log.d(TAG, "Going back")
+        navController?.navigateUp()
+    }
 
     override fun navigateToUserDetails(email: String) {
         Log.d(TAG, "Navigating to UserDetailsScreen")
