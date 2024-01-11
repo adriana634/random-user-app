@@ -23,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,6 +34,7 @@ import com.example.randomuser.model.User
 import com.example.randomuser.navigation.NavControllerNavigator
 import com.example.randomuser.navigation.Navigator
 import com.example.randomuser.ui.theme.RandomUserTheme
+import kotlinx.coroutines.flow.distinctUntilChanged
 import java.util.Date
 
 /**
@@ -57,27 +59,42 @@ fun UserList(
     preFetchPages: Int = 4,
     initialPlaceholderItems: Int = 8
 ) {
-    var previousPage by remember { mutableIntStateOf(0) }
+    var lastProcessedPage by remember { mutableIntStateOf(0) }
 
-    // Detect scroll position
     LaunchedEffect(lazyListState.firstVisibleItemIndex, lazyListState.layoutInfo.totalItemsCount) {
-        val visibleItemIndex = lazyListState.firstVisibleItemIndex
-        val totalItemCount = lazyListState.layoutInfo.totalItemsCount
+        snapshotFlow { Pair(lazyListState.firstVisibleItemIndex, lazyListState.layoutInfo.totalItemsCount) }
+            .distinctUntilChanged()
+            .collect { (visibleItemIndex, totalItemCount) ->
+                val itemsPerPage = lazyListState.layoutInfo.visibleItemsInfo.size
+                if (itemsPerPage != 0) {
+                    val firstVisibleItem = lazyListState.layoutInfo.visibleItemsInfo.firstOrNull()
+                    val lastVisibleItem = lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()
 
-        val itemsPerPage = lazyListState.layoutInfo.visibleItemsInfo.size
-        if (itemsPerPage != 0) {
-            val currentPage = (visibleItemIndex / itemsPerPage) + 1
+                    val user = users.getOrNull(visibleItemIndex)
+                    val currentPage = user?.page ?: 1
 
-            Log.d("UserList", "Current Page: $currentPage")
+                    if (firstVisibleItem != null &&
+                        firstVisibleItem.index >= itemsPerPage &&
+                        firstVisibleItem.index + itemsPerPage >= totalItemCount - preFetchPages
+                    ) {
+                        if (currentPage != lastProcessedPage) {
+                            Log.d("UserList", "Calling onPreviousPage. Current Page: $currentPage")
+                            onPreviousPage(currentPage)
+                            lastProcessedPage = currentPage
+                        }
+                    }
 
-            if (currentPage < previousPage) {
-                onPreviousPage(currentPage)
-            } else if (visibleItemIndex + lazyListState.layoutInfo.visibleItemsInfo.size >= totalItemCount - preFetchPages) {
-                onNextPage(currentPage)
+                    if (lastVisibleItem != null &&
+                        lastVisibleItem.index + itemsPerPage >= totalItemCount - preFetchPages
+                    ) {
+                        if (currentPage != lastProcessedPage) {
+                            Log.d("UserList", "Calling onNextPage. Current Page: $currentPage")
+                            onNextPage(currentPage)
+                            lastProcessedPage = currentPage
+                        }
+                    }
+                }
             }
-
-            previousPage = currentPage
-        }
     }
 
     LazyColumn(state = lazyListState) {
@@ -142,8 +159,8 @@ fun UserListPreview() {
 
 private fun getSampleUserList(): List<UserListItemViewModel> {
     return listOf(
-        UserListItemViewModel(User("John Doe", "john.doe@example.com", "male", "https://placehold.co/52x52/png", "https://placehold.co/52x52/png", Date(), "123456789")),
-        UserListItemViewModel(User("Jane Doe", "jane.doe@example.com", "female", "https://placehold.co/52x52/png", "https://placehold.co/52x52/png", Date(), "123456789")),
-        UserListItemViewModel(User("Bob Smith", "bob.smith@example.com", "male", "https://placehold.co/52x52/png", "https://placehold.co/52x52/png", Date(), "123456789"))
+        UserListItemViewModel(User("John Doe", "john.doe@example.com", "male", "https://placehold.co/52x52/png", "https://placehold.co/52x52/png", Date(), "123456789"), 1),
+        UserListItemViewModel(User("Jane Doe", "jane.doe@example.com", "female", "https://placehold.co/52x52/png", "https://placehold.co/52x52/png", Date(), "123456789"), 1),
+        UserListItemViewModel(User("Bob Smith", "bob.smith@example.com", "male", "https://placehold.co/52x52/png", "https://placehold.co/52x52/png", Date(), "123456789"), 1)
     )
 }

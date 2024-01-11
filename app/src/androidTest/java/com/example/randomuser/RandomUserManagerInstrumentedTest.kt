@@ -17,7 +17,11 @@ import retrofit2.http.Query
 import java.io.IOException
 
 class FakeErrorRandomUserService : RandomUserService {
-    override suspend fun getRandomUsers(@Query(value = "results") numberOfUsers: Int): Response<RandomUserResponse> {
+    override suspend fun getRandomUsers(
+        @Query(value = "results") numberOfUsers: Int,
+        @Query(value = "page") page: Int,
+        @Query(value = "seed") seed: String
+    ): Response<RandomUserResponse> {
         throw IOException("Simulated network error")
     }
 }
@@ -32,7 +36,7 @@ class RandomUserManagerInstrumentedTest {
     fun getRandomUsers_networkSuccess_returnsMappedUsers(): Unit = runBlocking {
         // Act
         val numberOfUsers = 5
-        val result = randomUserManager.getRandomUsers(numberOfUsers)
+        val result = randomUserManager.getRandomUsers(numberOfUsers, 1)
 
         // Assert
         assertTrue(result is Result.Success)
@@ -52,7 +56,7 @@ class RandomUserManagerInstrumentedTest {
     fun getRandomUsers_networkError_returnsErrorResponse() = runBlocking {
         // Act
         val numberOfUsers = 5
-        val result = fakeErrorRandomUserManager.getRandomUsers(numberOfUsers)
+        val result = fakeErrorRandomUserManager.getRandomUsers(numberOfUsers, 1)
 
         // Assert
         assertTrue(result is Result.Error)

@@ -72,5 +72,5 @@ fun UserListItemPreview() {
 }
 
 private fun getSampleUser(): UserListItemViewModel {
-    return UserListItemViewModel(User("John Doe", "john.doe@example.com", "male", "https://placehold.co/52x52/png", "https://placehold.co/52x52/png", Date(), "123456789"))
+    return UserListItemViewModel(User("John Doe", "john.doe@example.com", "male", "https://placehold.co/52x52/png", "https://placehold.co/52x52/png", Date(), "123456789"), 1)
 }

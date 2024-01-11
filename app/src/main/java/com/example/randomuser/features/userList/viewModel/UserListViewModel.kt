@@ -18,7 +18,9 @@ import kotlinx.coroutines.withContext
 /**
  * ViewModel class for managing the list of users.
  */
-class UserListViewModel(private val randomUserManager: RandomUserManager) : ViewModel() {
+class UserListViewModel(
+    private val randomUserManager: RandomUserManager
+) : ViewModel() {
 
     companion object {
         // TAG for logging purposes.
@@ -73,7 +75,7 @@ class UserListViewModel(private val randomUserManager: RandomUserManager) : View
                         }
 
                         _usersViewModels.value = _allUserModels.map { user ->
-                            UserListItemViewModel(user)
+                            UserListItemViewModel(user, page)
                         }
 
                         // If loading the first page, mark as loaded
@@ -155,6 +157,7 @@ class UserListViewModel(private val randomUserManager: RandomUserManager) : View
 
             // Determine the range of pages to load
             val pagesToLoad = (currentPage + PAGE_INCREMENT)..(currentPage + MAX_PAGES_IN_MEMORY * PAGE_INCREMENT)
+            Log.d(TAG, "currentPage: $currentPage, trying to load: $pagesToLoad")
 
             val deferredPages = pagesToLoad.mapNotNull { nextPage ->
                 if (nextPage !in loadedPagesSet) {

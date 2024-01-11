@@ -3,7 +3,8 @@ package com.example.randomuser.features.userList.viewModel
 import com.example.randomuser.model.User
 
 class UserListItemViewModel(
-    private val user: User
+    private val user: User,
+    val page: Int
 ) {
 
     val name: String
